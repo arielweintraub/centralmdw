@@ -14,12 +14,14 @@ const s = fs.readFileSync("trabalho/index.html", "utf8");
 const i = s.indexOf("var DATA = {"), j = s.indexOf("\n};", i);
 if (i < 0 || j < 0) throw new Error("bloco DATA não encontrado");
 const DATA = Function(s.slice(i, j + 3) + "; return DATA;")();
-for (const k of ["atualizadoEm","controle","pendencias","vencimentos","fixas","gastos","imoveis","seguros","documentos","historico"])
+for (const k of ["atualizadoEm","controle","pendencias","vencimentos","fixas","gastos","imoveis","seguros","extratos","historico"])
   if (DATA[k] === undefined) throw new Error("falta o campo " + k);
 const iso = /^\d{4}-\d{2}-\d{2}$/;
 for (const v of DATA.vencimentos) if (!iso.test(v.data) || !v.titulo) throw new Error("vencimento inválido: " + JSON.stringify(v));
 for (const p of DATA.pendencias) if (!iso.test(p.data) || !p.titulo) throw new Error("pendência inválida: " + JSON.stringify(p));
 for (const s2 of DATA.seguros) if (s2.fim && !iso.test(s2.fim)) throw new Error("fim de seguro inválido: " + s2.fim);
+for (const h of DATA.historico) if (!iso.test(h.data) || !h.texto) throw new Error("histórico inválido: " + JSON.stringify(h));
+for (const f of DATA.fixas) if (f.ultimo && !["ok","late"].includes(f.ultimo.nivel)) throw new Error("conta fixa inválida: " + JSON.stringify(f));
 if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(DATA.atualizadoEm)) throw new Error("atualizadoEm inválido");
 const bad = /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/.exec(s.slice(i, j));
 if (bad) throw new Error("parece haver um CPF no DATA: " + bad[0]);
@@ -38,7 +40,7 @@ npx -y staticrypt@3.5.4 trabalho/index.html -p "$MDW_PASS" -d saida --short \
   --template-color-primary "#1E5E4B" --template-color-secondary "#F2F5F3" >/dev/null
 
 # 3. Nada de texto aberto no arquivo publicado
-if grep -q -i -E "var DATA|Parreira|fastmail|eSocial|Allianz|Gueld" saida/index.html; then
+if grep -q -i -E "var DATA|Parreira|fastmail|eSocial|Allianz|Gueld|Pontal" saida/index.html; then
   echo "ERRO: texto aberto apareceu no arquivo criptografado. Nada foi publicado." >&2; exit 1
 fi
 
