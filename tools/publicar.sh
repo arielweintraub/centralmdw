@@ -18,7 +18,9 @@ for (const k of ["atualizadoEm","controle","pendencias","vencimentos","fixas","g
   if (DATA[k] === undefined) throw new Error("falta o campo " + k);
 const iso = /^\d{4}-\d{2}-\d{2}$/;
 for (const v of DATA.vencimentos) if (!iso.test(v.data) || !v.titulo) throw new Error("vencimento inválido: " + JSON.stringify(v));
-for (const p of DATA.pendencias) if (!iso.test(p.data) || !p.titulo) throw new Error("pendência inválida: " + JSON.stringify(p));
+for (const p of DATA.pendencias) if (!iso.test(p.data) || !p.titulo || !/^[a-z0-9-]+$/.test(p.id || "")) throw new Error("pendência inválida (data, titulo e id em minúsculas-com-hífen): " + JSON.stringify(p));
+const ids = DATA.pendencias.map(p => p.id); if (new Set(ids).size !== ids.length) throw new Error("id de pendência repetido");
+if (!Array.isArray(DATA.controle.dispensados)) throw new Error("falta controle.dispensados");
 for (const s2 of DATA.seguros) if (s2.fim && !iso.test(s2.fim)) throw new Error("fim de seguro inválido: " + s2.fim);
 for (const h of DATA.historico) if (!iso.test(h.data) || !h.texto) throw new Error("histórico inválido: " + JSON.stringify(h));
 for (const f of DATA.fixas) if (f.ultimo && !["ok","late"].includes(f.ultimo.nivel)) throw new Error("conta fixa inválida: " + JSON.stringify(f));
